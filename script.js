@@ -12,22 +12,22 @@ const planoDeFundo = {//plano de fundo
     altura: 204,
     x: 0,
     y: canvas.height - 204,
-    desenhar(){
-        contexto.fillStyle = '#70c5c3' 
+    desenhar() {
+        contexto.fillStyle = '#70c5c3'
         contexto.fillRect(0, 0, canvas.width, canvas.height)
         contexto.drawImage(
             sprites,
-            planoDeFundo .SpriteX, planoDeFundo .SpriteY, //Sprite X, Sprite Y 
-            planoDeFundo .largura, planoDeFundo .altura, //tamanho do recorte na sprite
-            planoDeFundo .x, planoDeFundo .y,
-            planoDeFundo .largura, planoDeFundo .altura,
+            planoDeFundo.SpriteX, planoDeFundo.SpriteY, //Sprite X, Sprite Y 
+            planoDeFundo.largura, planoDeFundo.altura, //tamanho do recorte na sprite
+            planoDeFundo.x, planoDeFundo.y,
+            planoDeFundo.largura, planoDeFundo.altura,
         )
         contexto.drawImage(
             sprites,
-            planoDeFundo .SpriteX, planoDeFundo .SpriteY, //Sprite X, Sprite Y 
-            planoDeFundo .largura, planoDeFundo .altura, //tamanho do recorte na sprite
-            (planoDeFundo.x + planoDeFundo.largura), planoDeFundo .y,
-            planoDeFundo .largura, planoDeFundo .altura,
+            planoDeFundo.SpriteX, planoDeFundo.SpriteY, //Sprite X, Sprite Y 
+            planoDeFundo.largura, planoDeFundo.altura, //tamanho do recorte na sprite
+            (planoDeFundo.x + planoDeFundo.largura), planoDeFundo.y,
+            planoDeFundo.largura, planoDeFundo.altura,
         )
     }
 }
@@ -65,6 +65,13 @@ const flappyBird = {//passarinho
     altura: 24,
     x: 10,
     y: 50,
+    gravidade: 0.25,
+    velocidade: 0,
+    atualizar() {
+        flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade
+
+        flappyBird.y = flappyBird.y + flappyBird.velocidade
+    },
     desenhar() {
         contexto.drawImage(
             sprites,
@@ -77,12 +84,71 @@ const flappyBird = {//passarinho
     }
 }
 
-function loop() {
-    planoDeFundo.desenhar()
-    chao.desenhar()
-    flappyBird.desenhar()
+const mensagemGetReady = { //mensagemGetReady
+    sX: 134,
+    sY: 0,
+    w: 174,
+    h: 152,
+    x: (canvas.width / 2) - 174 / 2,
+    y: 50,
+    desenhar() {
+        contexto.drawImage(
+            sprites,
+            mensagemGetReady.sX, mensagemGetReady.sY, //Sprite sX, Sprite sY
+            mensagemGetReady.w, mensagemGetReady.h, //tamanho do recorte na sprite
+            mensagemGetReady.x, mensagemGetReady.y,
+            mensagemGetReady.w, mensagemGetReady.h,
+        )
+    }
+}
 
-    flappyBird.y = flappyBird.y + 1
+//
+// telas
+//
+let telaAtiva = {}
+function mudaParaTela(novaTela) {
+    telaAtiva = novaTela
+}
+const telas = {
+    INICIO: {
+        desenhar() {
+            planoDeFundo.desenhar()
+            chao.desenhar()
+            flappyBird.desenhar()
+            mensagemGetReady.desenhar()
+        },
+        click(){
+            mudaParaTela(telas.JOGO)
+        },
+        atualizar() {
+
+        }
+    }
+}
+
+telas.JOGO = {
+    desenhar() {
+        planoDeFundo.desenhar()
+        chao.desenhar()
+        flappyBird.desenhar()
+    },
+    atualizar() {
+        flappyBird.atualizar()
+    }
+}
+
+function loop() {
+
+    telaAtiva.desenhar()
+    telaAtiva.atualizar()
+
     requestAnimationFrame(loop)
 }
+
+window.addEventListener('click', function(){
+    if(telaAtiva.click){
+        telaAtiva.click()
+    }
+})
+mudaParaTela(telas.INICIO)
 loop()
