@@ -127,7 +127,7 @@ function criaFlappyBird() {
         frameAtual: 0,
         atualizarOFrameAtual() {
             const intervaloDeFrames = 10
-            const passouOIntervalo = frames % intervaloDeFrames === 0 
+            const passouOIntervalo = frames % intervaloDeFrames === 0
             if (passouOIntervalo) {
                 const baseDoIncremento = 1
                 const incremento = baseDoIncremento + flappyBird.frameAtual
@@ -152,7 +152,6 @@ function criaFlappyBird() {
     return flappyBird
 }
 
-
 const mensagemGetReady = { //mensagemGetReady
     sX: 134,
     sY: 0,
@@ -169,6 +168,99 @@ const mensagemGetReady = { //mensagemGetReady
             mensagemGetReady.w, mensagemGetReady.h,
         )
     }
+}
+
+function criaCanos() {
+    const canos = {
+        largura: 52,
+        altura: 400,
+        chao: {
+            spriteX: 0,
+            spriteY: 169,
+        },
+        ceu: {
+            spriteX: 52,
+            spriteY: 169,
+        },
+        espaco: 80,
+        desenhar() {
+            canos.pares.forEach(function (par) {
+                const yRandom = par.y
+                const espacamentoEntreCanos = 90
+
+                const canoCeuX = par.x
+                const canoCeuY = yRandom
+
+                //Cano do céu
+                contexto.drawImage(
+                    sprites,
+                    canos.ceu.spriteX, canos.ceu.spriteY,
+                    canos.largura, canos.altura,
+                    canoCeuX, canoCeuY,
+                    canos.largura, canos.altura,
+                )
+                //Cano do chão
+                const canoChaoX = par.x
+                const canoChaoY = canos.altura + espacamentoEntreCanos + yRandom
+                contexto.drawImage(
+                    sprites,
+                    canos.chao.spriteX, canos.chao.spriteY,
+                    canos.largura, canos.altura,
+                    canoChaoX, canoChaoY,
+                    canos.largura, canos.altura,
+                )
+
+                par.canoCeu = {
+                    x: canoCeuX,
+                    y: canos.altura + canoCeuY
+                }
+                par.canoChao = {
+                    x: canoChaoX,
+                    y: canoChaoY
+                }
+            })
+        },
+        temColisaoComOFlappyBird(par) {
+            const cabecaDoFlappy = globais.flappyBird.y
+            const peDoFlappy = globais.flappyBird.y + globais.flappyBird.altura
+
+            if (globais.flappyBird.x >= par.x) {
+                console.log('flappy bird invadiu a area dos canos')
+                if (cabecaDoFlappy <= par.canoCeu.y) {
+                    return true
+                }
+
+                if (peDoFlappy >= par.canoChao.y) {
+                    return true
+                }
+            }
+            return false
+        },
+        pares: [],
+        atualizar() {
+            const passou100Frames = frames % 100 === 0
+            if (passou100Frames) {
+                console.log('passou 100 frames')
+                canos.pares.push({
+                    x: canvas.width,
+                    y: -150 * (Math.random() + 1),
+                })
+            }
+
+            canos.pares.forEach(function (par) {
+                par.x = par.x - 2
+
+                if (canos.temColisaoComOFlappyBird(par)) {
+                    console.log('vc perdeu')
+                    mudaParaTela(telas.INICIO)
+                }
+                if (par.x + canos.largura <= 0) {
+                    canos.pares.shift()
+                }
+            })
+        }
+    }
+    return canos
 }
 
 //
@@ -188,11 +280,13 @@ const telas = {
         inicializar() {
             globais.flappyBird = criaFlappyBird()
             globais.chao = criaChao()
+            globais.canos = criaCanos()
         },
         desenhar() {
             planoDeFundo.desenhar()
-            globais.chao.desenhar()
             globais.flappyBird.desenhar()
+            globais.canos.desenhar()
+            globais.chao.desenhar()
             mensagemGetReady.desenhar()
         },
         click() {
@@ -207,6 +301,7 @@ const telas = {
 telas.JOGO = {
     desenhar() {
         planoDeFundo.desenhar()
+        globais.canos.desenhar()
         globais.chao.desenhar()
         globais.flappyBird.desenhar()
     },
@@ -214,6 +309,8 @@ telas.JOGO = {
         globais.flappyBird.pula()
     },
     atualizar() {
+        globais.canos.atualizar()
+        globais.chao.atualizar()
         globais.flappyBird.atualizar()
     }
 }
