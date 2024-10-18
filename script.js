@@ -111,9 +111,8 @@ function criaFlappyBird() {
             if (fazColisao(flappyBird, globais.chao)) {
                 console.log('fez colisao')
                 som_HIT.play()
-                setTimeout(() => {
-                }, 500)
-                mudaParaTela(telas.INICIO)
+
+                mudaParaTela(telas.GAME_OVER)
                 return
             }
             flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade
@@ -166,6 +165,23 @@ const mensagemGetReady = { //mensagemGetReady
             mensagemGetReady.w, mensagemGetReady.h, //tamanho do recorte na sprite
             mensagemGetReady.x, mensagemGetReady.y,
             mensagemGetReady.w, mensagemGetReady.h,
+        )
+    }
+}
+const mensagemGameOver = { //mensagemGetReady
+    sX: 134,
+    sY: 153,
+    w: 226,
+    h: 200,
+    x: (canvas.width / 2) - 226 / 2,
+    y: 50,
+    desenhar() {
+        contexto.drawImage(
+            sprites,
+            mensagemGameOver.sX, mensagemGameOver.sY, //Sprite sX, Sprite sY
+            mensagemGameOver.w, mensagemGameOver.h, //tamanho do recorte na sprite
+            mensagemGameOver.x, mensagemGameOver.y,
+            mensagemGameOver.w, mensagemGameOver.h,
         )
     }
 }
@@ -224,7 +240,7 @@ function criaCanos() {
             const cabecaDoFlappy = globais.flappyBird.y
             const peDoFlappy = globais.flappyBird.y + globais.flappyBird.altura
 
-            if (globais.flappyBird.x >= par.x) {
+            if ((globais.flappyBird.x + globais.flappyBird.largura) >= par.x) {
                 console.log('flappy bird invadiu a area dos canos')
                 if (cabecaDoFlappy <= par.canoCeu.y) {
                     return true
@@ -238,6 +254,7 @@ function criaCanos() {
         },
         pares: [],
         atualizar() {
+
             const passou100Frames = frames % 100 === 0
             if (passou100Frames) {
                 console.log('passou 100 frames')
@@ -252,15 +269,45 @@ function criaCanos() {
 
                 if (canos.temColisaoComOFlappyBird(par)) {
                     console.log('vc perdeu')
-                    mudaParaTela(telas.INICIO)
+
+                    mudaParaTela(telas.GAME_OVER)
+                    som_HIT.play()
                 }
                 if (par.x + canos.largura <= 0) {
                     canos.pares.shift()
+                    const som_HIT = new Audio()
+                    som_HIT.src = './efeitos/ponto.wav'
+                    som_HIT.play()
                 }
             })
         }
     }
     return canos
+}
+
+function criaPlacar() {
+    const placar = {
+        pontuacao: 0,
+        desenhar() {
+            contexto.font = '35px VT323'
+            contexto.textAlign = 'right'
+            contexto.fillStyle = 'white'
+            contexto.fillText(`${placar.pontuacao}`, canvas.width - 10, 35)
+            placar.pontuacao
+        },
+        atualizar() {
+            const intervaloDeFrames = 10
+            const passouOIntervalo = frames % intervaloDeFrames === 0
+
+
+            if (passouOIntervalo) {
+                placar.pontuacao = placar.pontuacao + 1
+            }
+
+        },
+    }
+
+    return placar
 }
 
 //
@@ -299,19 +346,40 @@ const telas = {
 }
 
 telas.JOGO = {
+    inicializar() {
+        globais.placar = criaPlacar()
+    },
     desenhar() {
         planoDeFundo.desenhar()
         globais.canos.desenhar()
         globais.chao.desenhar()
         globais.flappyBird.desenhar()
+        globais.placar.desenhar()
     },
     click() {
+        const som_HIT = new Audio()
+        som_HIT.src = './efeitos/pulo.wav'
         globais.flappyBird.pula()
+        som_HIT.play()
+
     },
     atualizar() {
         globais.canos.atualizar()
         globais.chao.atualizar()
         globais.flappyBird.atualizar()
+        globais.placar.atualizar()
+    }
+}
+
+telas.GAME_OVER = {
+    desenhar() {
+        mensagemGameOver.desenhar()
+    },
+
+    atualizar() {
+    },
+    click() {
+        mudaParaTela(telas.INICIO)
     }
 }
 
